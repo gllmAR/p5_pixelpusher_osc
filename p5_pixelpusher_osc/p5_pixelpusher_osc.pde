@@ -15,7 +15,19 @@
 // Set net_without_led true to bypass checking 
 // Serve to test when no pixel pusher on network
 public boolean net_without_led = true; 
-// pixel stuff
+
+
+
+int[] strips_states = {1, 1, 1, 1, 1, 1, 1, 1};
+int[] strips_zones=   {1, 2, 3, 3, 3, 3, 4, 4};
+int[] scenes_zones=   {0, 3, 1, 1, 1};         //start state (zone 0 is unassigned, all )
+long[] zones_timestamps= {0, 0, 0, 0, 0};
+float[] strips_elapses= {0, 0, 0, 0, 0, 0, 0, 0};
+String[] commentaires= {" ", " ", " ", " ", " ", " ", " ", " ", };
+
+float[] strip_color_picker = {50,50,50};
+
+// pixelpusher
 import com.heroicrobot.dropbit.registry.*;
 import com.heroicrobot.dropbit.devices.pixelpusher.Pixel;
 import com.heroicrobot.dropbit.devices.pixelpusher.Strip;
@@ -23,19 +35,11 @@ import java.util.*;
 DeviceRegistry registry;
 
 
-// osc stuff
+// osc
 import oscP5.*;
 import netP5.*;
 OscP5 oscP5;
-NetAddress myRemoteLocation;
-
-
-int[] strips_states = {1, 1, 1, 1, 1, 1, 1, 1};
-int[] strips_zones=   {1, 2, 3, 3, 3, 3, 4, 4};
-int[] scenes_zones=   {0, 0, 0, 0};
-long[] zones_timestamps= {0, 0, 0, 0, 0};
-float[] strips_elapses= {0, 0, 0, 0, 0, 0, 0, 0};
-String[] commentaires= {" ", " ", " ", " ", " ", " ", " ", " ", };
+NetAddress myRemoteLocation; //futur expansion...
 
 
 class TestObserver implements Observer {
@@ -50,7 +54,6 @@ class TestObserver implements Observer {
 }
 
 TestObserver testObserver; 
-int c = 0; // couleur pour cycle de couleur rainbow
 
 void setup() 
 {
@@ -60,16 +63,31 @@ void setup()
 
   oscP5 = new OscP5(this, 9090);
   oscP5.plug(this, "set_strips_states_from_zone", "/scene");
+  oscP5.plug(this, "set_cp_hue", "/pixelpush/cp_hue");
+  oscP5.plug(this, "set_cp_saturation", "/pixelpush/cp_saturation");
+  oscP5.plug(this, "set_cp_luma", "/pixelpush/cp_luma");
   myRemoteLocation = new NetAddress("127.0.0.1", 9090);
 
   colorMode(HSB, 100);
   size(480, 480);
   frameRate(60);
-  if (net_without_led) {
+  if (net_without_led) 
+  {
     testObserver.hasStrips = true;
-  } //permet le bypass de previz
+  } 
+  //permet le bypass de previz
   textFont(createFont("SourceCodePro-Regular.ttf", 14));
+  
+  // set strips at init state 
+  for(int i=0; i<scenes_zones.length; i++)
+  {
+    set_strips_states_from_zone(i, scenes_zones[i]);
+  }
 }
+// OSC PARSING FUNCTIONS
+void set_cp_hue(float _hue){strip_color_picker[0]=_hue;}
+void set_cp_saturation(float _saturation){strip_color_picker[1]=_saturation;}
+void set_cp_luma(float _luma){strip_color_picker[2]=_luma;}
 
 void set_strips_states_from_zone(int _zone, int _state)
 {
@@ -84,19 +102,15 @@ void set_strips_states_from_zone(int _zone, int _state)
 }
 
 /* incoming osc message are forwarded to the oscEvent method. */
-void oscEvent(OscMessage theOscMessage) {
-  /* with theOscMessage.isPlugged() you check if the osc message has already been
-   * forwarded to a plugged method. if theOscMessage.isPlugged()==true, it has already 
-   * been forwared to another method in your sketch. theOscMessage.isPlugged() can 
-   * be used for double posting but is not required.
-   */
-  if (theOscMessage.isPlugged()==false) {
-    /* print the address pattern and the typetag of the received OscMessage */
-    println("### received an osc message.");
-    println("### addrpattern\t"+theOscMessage.addrPattern());
-    println("### typetag\t"+theOscMessage.typetag());
+void oscEvent(OscMessage theOscMessage) 
+{
+  if (theOscMessage.isPlugged()==false) 
+  {
+    // implementer callback de reception ici si necessaire 
+    // voir example plug dans OSCp5 si besoin
   }
 }
+
 void draw() 
 {
   int x=0;
@@ -171,6 +185,8 @@ color zone_state_to_color(int _zone, int _state, int _strip)
   color return_color = color(50, 50, 50);
   String commentaire = "invalid";
   strips_elapses[_strip] = (System.nanoTime()-zones_timestamps[_zone])*0.000000001;
+  
+  // parse zones
   if (_zone == 1 )
   {
     if (_state == 0)
@@ -251,6 +267,11 @@ color zone_state_to_color(int _zone, int _state, int _strip)
       //pulsation en vert
       //passe de 15 % à 50% en intensité lumineuse
       //rythme: respiration en apnée ( scaphandrier ou, darth vader)
+      
+      float LFO = sin(strips_elapses[_strip]*0.2);
+      float intensity = map(LFO, -1, 1, 15,50 );
+      return_color = color (50, 100, intensity);
+      
     } else if (_state == 2)
     {
       commentaire = "alarme lorsque lasers touchés";
@@ -258,16 +279,31 @@ color zone_state_to_color(int _zone, int _state, int _strip)
       //commence à 100 %
       //descend à 25 % en 1 sec
       //revient d’un coup sec à 100 %
+      float PHASOR = strips_elapses[_strip] % 1 /1;
+      float intensity = map(PHASOR, 0, 1, 100,25 );
+      return_color = color (0, 100, intensity);
     } else if (_state == 3)
     {
       commentaire = "ambiance futur à la fin des lasers";
       //à 50 % d’intensité
       //mélange de bleu pâle et vert fluo (presque jaune)
       //style 1 mètres une couleur, 1 mètres une autres couleur
+      color bleu_pale = color(60,50,60);
+      color vert_fluo = color(30,100,60);
+      
+      if (_strip%2 == 0) //hack pas clean, mais permet un offset
+      {
+        return_color = bleu_pale;
+      } else {
+        return_color = vert_fluo;
+      }
+      
+      
     } else if (_state == 4)
     {
       commentaire = "victoire";
       //blanc chaud â 100%
+      return_color=color(30,10,100);
     } else // undef
     {
       commentaire = "state undefined";
@@ -300,6 +336,15 @@ color zone_state_to_color(int _zone, int _state, int _strip)
       commentaire = "state undefined";
     }
   }
+  
+  if(_state == -1)
+  {
+    // color picker pour any strip
+    commentaire = "Color Picker HSL";
+   
+    return_color = color(strip_color_picker[0], strip_color_picker[1], strip_color_picker[2]);
+  }  
+  
   commentaires[_strip]=commentaire;
   return return_color ;
 }
