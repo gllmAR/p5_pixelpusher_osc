@@ -14,7 +14,7 @@
 
 // Set net_without_led true to bypass checking 
 // Serve to test when no pixel pusher on network
-public boolean net_without_led = true; 
+public boolean net_without_led = false; 
 
 
 
@@ -62,7 +62,7 @@ void setup()
   registry.addObserver(testObserver);
 
   oscP5 = new OscP5(this, 9090);
-  oscP5.plug(this, "set_strips_states_from_zone", "/scene");
+  oscP5.plug(this, "set_strips_states_from_zone", "/pixelpush/scene");
   oscP5.plug(this, "set_cp_hue", "/pixelpush/cp_hue");
   oscP5.plug(this, "set_cp_saturation", "/pixelpush/cp_saturation");
   oscP5.plug(this, "set_cp_luma", "/pixelpush/cp_luma");
