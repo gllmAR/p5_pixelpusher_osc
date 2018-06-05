@@ -356,7 +356,7 @@
                         "default": "",
                         "value": "",
                         "precision": 2,
-                        "address": "/pixelpush/cp_hue",
+                        "address": "/pixelpusher/cp_hue",
                         "touchAddress": "",
                         "preArgs": [],
                         "target": [],
@@ -390,7 +390,7 @@
                         "default": "",
                         "value": "",
                         "precision": 2,
-                        "address": "/pixelpush/cp_saturation",
+                        "address": "/pixelpusher/cp_saturation",
                         "touchAddress": "",
                         "preArgs": [],
                         "target": [],
@@ -424,7 +424,7 @@
                         "default": "",
                         "value": "",
                         "precision": 2,
-                        "address": "/pixelpush/cp_luma",
+                        "address": "/pixelpusher/cp_luma",
                         "touchAddress": "",
                         "preArgs": [],
                         "target": [],
@@ -433,7 +433,7 @@
                     {
                         "type": "push",
                         "top": 430,
-                        "left": 10,
+                        "left": 70,
                         "id": "1_CP",
                         "linkId": "",
                         "width": 50,
@@ -455,7 +455,7 @@
                     {
                         "type": "push",
                         "top": 430,
-                        "left": 70,
+                        "left": 130,
                         "id": "2_CP",
                         "linkId": "",
                         "width": 50,
@@ -477,7 +477,7 @@
                     {
                         "type": "push",
                         "top": 430,
-                        "left": 130,
+                        "left": 190,
                         "id": "3_CP",
                         "linkId": "",
                         "width": 50,
@@ -499,7 +499,7 @@
                     {
                         "type": "push",
                         "top": 430,
-                        "left": 190,
+                        "left": 250,
                         "id": "4_CP",
                         "linkId": "",
                         "width": 50,
@@ -515,6 +515,26 @@
                         "preArgs": [
                             4
                         ],
+                        "target": [],
+                        "bypass": false
+                    },
+                    {
+                        "type": "push",
+                        "top": 430,
+                        "left": 10,
+                        "id": "reset",
+                        "linkId": "",
+                        "width": 50,
+                        "height": "auto",
+                        "label": "auto",
+                        "color": "auto",
+                        "css": "",
+                        "on": 1,
+                        "off": 0,
+                        "norelease": true,
+                        "precision": 0,
+                        "address": "/pixelpusher/reset_int",
+                        "preArgs": [],
                         "target": [],
                         "bypass": false
                     }
